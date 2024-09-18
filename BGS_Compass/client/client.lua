@@ -1,8 +1,8 @@
--- Define map types
+-- Define the map types
 local mapTypeOnFoot = Config.MapTypeOnFoot
 local mapTypeOnMount = Config.MapTypeOnMount
 local mapTypeNoCompass = Config.MapTypeNoCompass
-local mapTypeCompassOnly = Config.MapTypeCompassOnly
+local mapTypeWithCompassOnly = Config.MapTypeWithCompassOnly
 
 local hasMapItem = false
 local userGroup
@@ -18,31 +18,52 @@ local function contains(table, element)
     return false
 end
 
--- Register set minimap type event
-RegisterNetEvent('BGS_Compass:setMinimapType')
-AddEventHandler('BGS_Compass:setMinimapType', function(minimapType)
+-- Register show simple minimap event (for compass only)
+RegisterNetEvent('BGS_Compass:showSimpleMiniMap')
+AddEventHandler('BGS_Compass:showSimpleMiniMap', function()
     local player = PlayerPedId()
-    local playerOnMount = IsPedOnMount(player)
+    local playerOnMout = IsPedOnMount(player)
     local playerOnVeh = IsPedInAnyVehicle(player, false)
-
-    if minimapType == mapTypeCompassOnly then
-        SetMinimapType(mapTypeCompassOnly) -- Tipo 3 para bússola simples
+    -- Check if player is on foot or vehicle
+    if not playerOnMout and not playerOnVeh and not Config.UseUserCompass then
+        SetMinimapType(mapTypeWithCompassOnly)
         DisplayRadar(true)
-    elseif not playerOnMount and not playerOnVeh then
+    elseif playerOnMout or playerOnVeh and not Config.UseUserCompass then
+        SetMinimapType(mapTypeWithCompassOnly)
+        DisplayRadar(true)
+    else
+        DisplayRadar(true)
+        return
+    end
+end)
+
+-- Register show minimap event
+RegisterNetEvent('BGS_Compass:showMiniMap')
+AddEventHandler('BGS_Compass:showMiniMap', function()
+    local player = PlayerPedId()
+    local playerOnMout = IsPedOnMount(player)
+    local playerOnVeh = IsPedInAnyVehicle(player, false)
+    -- Check if player is on foot or vehicle
+    if not playerOnMout and not playerOnVeh and not Config.UseUserCompass then
         SetMinimapType(mapTypeOnFoot)
         DisplayRadar(true)
-    elseif playerOnMount or playerOnVeh then
+    elseif playerOnMout or playerOnVeh and not Config.UseUserCompass then
         SetMinimapType(mapTypeOnMount)
         DisplayRadar(true)
     else
         DisplayRadar(true)
+        return
     end
 end)
 
 -- Register hide minimap event
 RegisterNetEvent('BGS_Compass:hideMiniMap')
 AddEventHandler('BGS_Compass:hideMiniMap', function()
-    DisplayRadar(false)
+    if not Config.UseUserCompass then
+        SetMinimapType(mapTypeNoCompass)
+    else
+        DisplayRadar(false)
+    end
 end)
 
 -- Register show map event

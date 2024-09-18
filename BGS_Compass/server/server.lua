@@ -5,7 +5,7 @@ TriggerEvent("getCore", function(core)
 end)
 
 -- Register server event to check player inventory
-RegisterServerEvent("BGS_Compass:checkPlayerInventory")
+RegisterServerEvent("BGS_Compass:checkPlayerInventory") 
 AddEventHandler("BGS_Compass:checkPlayerInventory", function()
     local _source = source
     -- Error check for player inventory
@@ -16,16 +16,14 @@ AddEventHandler("BGS_Compass:checkPlayerInventory", function()
     local compassCount = exports.vorp_inventory:getItemCount(_source, nil, Config.CompassItemToCheck)
     local mapCount = exports.vorp_inventory:getItemCount(_source, nil, Config.MapItemToCheck)
 
-    local minimapType
-
-    if compassCount > 0 and Config.UseCompass then
-        if mapCount > 0 and Config.UseMap then
-            minimapType = Config.MapTypeOnFoot
-        else
-            minimapType = Config.MapTypeCompassOnly -- Tipo 3 para bússola simples
-        end
-        TriggerClientEvent("BGS_Compass:setMinimapType", _source, minimapType)
-    elseif compassCount == 0 and Config.UseCompass then
+    if compassCount > 0 and mapCount == 0 and Config.UseCompass then
+        -- Player has only the compass, show simple minimap
+        TriggerClientEvent("BGS_Compass:showSimpleMiniMap", _source)
+    elseif compassCount > 0 and mapCount > 0 and Config.UseCompass and Config.UseMap then
+        -- Player has both compass and map, show normal minimap
+        TriggerClientEvent("BGS_Compass:showMiniMap", _source)
+    else
+        -- Hide minimap if no compass or map
         TriggerClientEvent("BGS_Compass:hideMiniMap", _source)
     end
 
@@ -34,9 +32,4 @@ AddEventHandler("BGS_Compass:checkPlayerInventory", function()
     elseif mapCount == 0 and Config.UseMap then
         TriggerClientEvent("BGS_Compass:disableMap", _source)
     end
-end)
-
-RegisterServerEvent("BGS_Compass:getUserGroup", function()
-    local _source = source
-    TriggerClientEvent("BGS_Compass:storeUserGroup", _source, VORPcore.getUser(_source).getGroup)
 end)
